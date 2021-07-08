@@ -19,10 +19,22 @@ Processor& System::Cpu() { return cpu_; }
 
 // TODO: Return a container composed of the system's processes
 vector<Process>& System::Processes() {
-  auto processIDs = LinuxParser::Pids();
-  for(auto pid : processIDs){
+    processes_.clear();
+  vector<int> processIDs = LinuxParser::Pids();
+  for(int pid : processIDs){
     Process p{pid};
-    processes_.emplace_back(p);
+    // start testing
+//    if (pid == 2240){
+//        p.CpuUtilization();
+//
+//    }
+//    p.UpTime();
+//    p.User();
+//    p.Command();
+//    p.Pid();
+
+    // end testing
+    processes_.push_back(p);
   }
   sort(processes_.begin(),processes_.end());
   return processes_;

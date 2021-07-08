@@ -6,18 +6,20 @@
 
 #include "process.h"
 
-using std::string;
-using std::to_string;
-using std::vector;
+Process::Process(int pid) {
+    pid_ = pid;
+}
 
 // TODO: Return this process's ID
 int Process::Pid() { return pid_; }
 
 // TODO: Return this process's CPU utilization
 float Process::CpuUtilization() const {
-  auto processJiffies = LinuxParser::ActiveJiffies(pid_);
-  auto upTime = Process::UpTime() ;
-  return static_cast<float>(processJiffies)/ sysconf(_SC_CLK_TCK)/upTime;
+    auto total_time = LinuxParser::ActiveJiffies(pid_);
+    auto seconds = Process::UpTime();
+    auto Hertz = sysconf(_SC_CLK_TCK);
+    auto cpu_usage = static_cast<float>((float)(total_time / Hertz) / seconds);
+    return cpu_usage;
 }
 
 // TODO: Return the command that generated this process
@@ -34,6 +36,6 @@ long Process::UpTime() const { return LinuxParser::UpTime(pid_); }
 
 // TODO: Overload the "less than" comparison operator for Process objects
 // REMOVE: [[maybe_unused]] once you define the function
-bool Process::operator<(Process const& a[[maybe_unused]]) const {
-  return LinuxParser::ActiveJiffies(pid_) < LinuxParser::ActiveJiffies(a.pid_);
+bool Process::operator<(Process const& a) const {
+  return this->CpuUtilization() < a.CpuUtilization();
 }

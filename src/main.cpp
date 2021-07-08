@@ -3,5 +3,10 @@
 
 int main() {
   System system;
+  // start test
+float cpu =   system.Cpu().Utilization();
+  // end test
+
+
   NCursesDisplay::Display(system);
 }

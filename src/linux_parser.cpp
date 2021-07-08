@@ -118,19 +118,23 @@ long LinuxParser::Jiffies() {
 // TODO: Read and return the number of active jiffies for a PID
 // REMOVE: [[maybe_unused]] once you define the function
 long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) {
-  string line;
-  string value;
-  vector<string> reserve;
-  string folder = std::to_string(pid);
-  std::ifstream file(kProcDirectory + folder + kStatFilename);
-  getline(file, line);
-  std::stringstream ss(line);
-  while (ss >> value) {
-    reserve.emplace_back(value);
-  }
-  long activeJiffies = stol(reserve[13]) + stol(reserve[14]) +
-                            stol(reserve[15]) + stol(reserve[16]);
-  return activeJiffies;
+    string line, value;
+    vector<string> reserve;
+    string folder = std::to_string(pid);
+    std::ifstream file(kProcDirectory + folder + kStatFilename);
+    if (file.is_open()) {
+        getline(file, line);
+        std::stringstream ss(line);
+        while (ss >> value) {
+            reserve.emplace_back(value);
+        }
+    }
+  auto utime = stol(reserve[13]);
+      auto stime = stol(reserve[14]);
+    auto cutime = stol(reserve[15]);
+    auto cstime = stol(reserve[16]);
+    auto total_time = utime + stime + cstime + cutime;
+    return total_time;
 }
 
 // TODO: Read and return the number of active jiffies for the system
@@ -158,7 +162,7 @@ vector<string> LinuxParser::CpuUtilization() {
       while (linestream >> cpu){
         if (cpu == "cpu") {
           while (linestream >> jiffie){
-            jiffies.emplace_back(jiffie);
+            jiffies.push_back(jiffie);
           }
           filestream.close();
           return jiffies;
@@ -210,7 +214,7 @@ int LinuxParser::RunningProcesses() {
 }
 // TODO: Read and return the command associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Command(int pid[[maybe_unused]]) {
+string LinuxParser::Command(int pid) {
   string line;
   string folder = std::to_string(pid);
   std::ifstream file(kProcDirectory + folder + kCmdlineFilename);
@@ -221,7 +225,7 @@ string LinuxParser::Command(int pid[[maybe_unused]]) {
 
 // TODO: Read and return the memory used by a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Ram(int pid[[maybe_unused]]) {
+string LinuxParser::Ram(int pid) {
   string line, title, memory, kB;
   string folder = std::to_string(pid);
   std::ifstream file(kProcDirectory + folder + kStatusFilename);
@@ -240,7 +244,7 @@ string LinuxParser::Ram(int pid[[maybe_unused]]) {
 
 // TODO: Read and return the user ID associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Uid(int pid[[maybe_unused]]) {
+string LinuxParser::Uid(int pid) {
   string line, title, number;
   string folder = std::to_string(pid);
   std::ifstream file(kProcDirectory + folder + kStatusFilename);
@@ -259,7 +263,7 @@ string LinuxParser::Uid(int pid[[maybe_unused]]) {
 
 // TODO: Read and return the user associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::User(int pid[[maybe_unused]]) {
+string LinuxParser::User(int pid) {
   string line, userName, str, userID;
   string user = Uid(pid);
   std::ifstream file(kPasswordPath);
@@ -278,10 +282,8 @@ string LinuxParser::User(int pid[[maybe_unused]]) {
 
 // TODO: Read and return the uptime of a process
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::UpTime(int pid[[maybe_unused]]) {
-//  source: https://man7.org/linux/man-pages/man5/proc.5.html
+long LinuxParser::UpTime(int pid) {
   string line, value;
-  long processUptime;
   vector<string> reserve;
   string folder = std::to_string(pid);
   std::ifstream file(kProcDirectory + folder + kStatFilename);
@@ -292,9 +294,11 @@ long LinuxParser::UpTime(int pid[[maybe_unused]]) {
       reserve.emplace_back(value);
     }
   }
-  processUptime = UpTime() - stol(reserve[21]) / sysconf(_SC_CLK_TCK);
-  return processUptime;
-
+    auto starttime = stof(reserve[21]);
+    auto Hertz = (float)sysconf(_SC_CLK_TCK);
+    auto uptime = LinuxParser::UpTime();
+    auto seconds = uptime - (starttime / Hertz) ;
+    return static_cast<long>(seconds);
 }
 
 
