@@ -108,11 +108,11 @@ long LinuxParser::UpTime() {
 // TODO: Read and return the number of jiffies for the system
 long LinuxParser::Jiffies() {
   auto jiffies = CpuUtilization();
-  auto map = LinuxParser::InitialJiffies(jiffies);
-  auto allJiffies = std::accumulate(std::begin(map), std::end(map), 0,
-                                    [](const long previous, const std::pair<LinuxParser::CPUStates, long>& p)
-                                    { return previous + p.second; });
-  return allJiffies;
+  long output = 0;
+  for (auto v : jiffies){
+    output += stol(v);
+  }
+  return output;
 }
 
 // TODO: Read and return the number of active jiffies for a PID
@@ -135,20 +135,13 @@ long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) {
 
 // TODO: Read and return the number of active jiffies for the system
 long LinuxParser::ActiveJiffies() {
-  auto jiffies = CpuUtilization();
-  auto map = LinuxParser::InitialJiffies(jiffies);
-  auto allJiffies = std::accumulate(std::begin(map), std::end(map), 0,
-                                    [](const long previous, const std::pair<LinuxParser::CPUStates, long>& p)
-                                    { return previous + p.second; });
-  auto idleJiffies = map[LinuxParser::CPUStates::kIdle_] + map[LinuxParser::CPUStates::kIOwait_];
-  return allJiffies - idleJiffies;
+  return Jiffies() - IdleJiffies();
 }
 
 // TODO: Read and return the number of idle jiffies for the system
 long LinuxParser::IdleJiffies() {
   auto jiffies = CpuUtilization();
-  auto map = LinuxParser::InitialJiffies(jiffies);
-  auto idleJiffies = map[LinuxParser::CPUStates::kIdle_] + map[LinuxParser::CPUStates::kIOwait_];
+  long idleJiffies = stol(jiffies[CPUStates::kIdle_]) + stol(jiffies[CPUStates::kIOwait_]);
   return idleJiffies;
 }
 
@@ -248,15 +241,15 @@ string LinuxParser::Ram(int pid[[maybe_unused]]) {
 // TODO: Read and return the user ID associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
 string LinuxParser::Uid(int pid[[maybe_unused]]) {
-  string line, title, num1;
+  string line, title, number;
   string folder = std::to_string(pid);
   std::ifstream file(kProcDirectory + folder + kStatusFilename);
   if (file.is_open()) {
     while(getline(file, line)){
       std::stringstream ss(line);
-      ss >> title >> num1;
+      ss >> title >> number;
       if (title == "Uid:"){
-        return num1;
+        return number;
       }
     }
     file.close();
@@ -275,7 +268,7 @@ string LinuxParser::User(int pid[[maybe_unused]]) {
       std::replace(line.begin(), line.end(), ':', ' ');
       std::stringstream ss(line);
       ss >> userName >> str >> userID;
-      if (userID == user){
+      if (userID == user && str == "x"){
         return userName;
       }
     }
@@ -286,39 +279,24 @@ string LinuxParser::User(int pid[[maybe_unused]]) {
 // TODO: Read and return the uptime of a process
 // REMOVE: [[maybe_unused]] once you define the function
 long LinuxParser::UpTime(int pid[[maybe_unused]]) {
- // source https://man7.org/linux/man-pages/man5/proc.5.html
+//  source: https://man7.org/linux/man-pages/man5/proc.5.html
   string line, value;
   long processUptime;
   vector<string> reserve;
   string folder = std::to_string(pid);
   std::ifstream file(kProcDirectory + folder + kStatFilename);
-  if (file.is_open()){
+  if (file.is_open()) {
     getline(file, line);
     std::stringstream ss(line);
-    while (ss >> value){
+    while (ss >> value) {
       reserve.emplace_back(value);
     }
-    processUptime = UpTime() - stol(reserve[21]) / sysconf(_SC_CLK_TCK);
-    return processUptime;
   }
+  processUptime = UpTime() - stol(reserve[21]) / sysconf(_SC_CLK_TCK);
+  return processUptime;
 
-
-
-
-  return 0; }
-
-std::map<LinuxParser::CPUStates, long> LinuxParser::InitialJiffies(vector<string> const &v){
-  std::map<LinuxParser::CPUStates, long> m{
-      {LinuxParser::CPUStates::kUser_, stol(v[0])},
-      {LinuxParser::CPUStates::kNice_, stol(v[1])},
-      {LinuxParser::CPUStates::kSystem_, stol(v[2])},
-      {LinuxParser::CPUStates::kIdle_, stol(v[3])},
-      {LinuxParser::CPUStates::kIOwait_, stol(v[4])},
-      {LinuxParser::CPUStates::kIRQ_, stol(v[5])},
-      {LinuxParser::CPUStates::kSoftIRQ_, stol(v[6])},
-      {LinuxParser::kSteal_, stol(v[7])},
-      {LinuxParser::CPUStates::kGuest_, stol(v[8])},
-      {LinuxParser::CPUStates::kGuestNice_, stol(v[9])}
-  };
-  return m;
 }
+
+
+
+

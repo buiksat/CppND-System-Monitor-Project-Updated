@@ -48,7 +48,6 @@ enum CPUStates {
 };
 
 std::vector<std::string> CpuUtilization();
-std::map<CPUStates, long> InitialJiffies(std::vector<std::string> const &v);
 long Jiffies();
 long ActiveJiffies();
 long ActiveJiffies(int pid);

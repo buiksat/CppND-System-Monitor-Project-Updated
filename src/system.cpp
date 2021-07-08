@@ -24,7 +24,9 @@ vector<Process>& System::Processes() {
     Process p{pid};
     processes_.emplace_back(p);
   }
-  return processes_; }
+  sort(processes_.begin(),processes_.end());
+  return processes_;
+}
 
 // TODO: Return the system's kernel identifier (string)
 std::string System::Kernel() { return LinuxParser::Kernel(); }
