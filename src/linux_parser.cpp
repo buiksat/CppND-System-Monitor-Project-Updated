@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include "linux_parser.h"
+#include "format.h"
+
 
 using std::stof;
 using std::string;
@@ -90,9 +92,9 @@ float LinuxParser::MemoryUtilization() {
  }
 
 // TODO: Read and return the system uptime
-long int LinuxParser::UpTime() {
+long LinuxParser::UpTime() {
    string line;
-  long int upTime, idleTime;
+   long upTime, idleTime;
   std::ifstream stream(kProcDirectory + kUptimeFilename);
    if (stream.is_open()) {
      std::getline(stream, line);
@@ -115,7 +117,21 @@ long LinuxParser::Jiffies() {
 
 // TODO: Read and return the number of active jiffies for a PID
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) { return 0; }
+long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) {
+  string line;
+  string value;
+  vector<string> reserve;
+  string folder = std::to_string(pid);
+  std::ifstream file(kProcDirectory + folder + kStatFilename);
+  getline(file, line);
+  std::stringstream ss(line);
+  while (ss >> value) {
+    reserve.emplace_back(value);
+  }
+  long activeJiffies = stol(reserve[13]) + stol(reserve[14]) +
+                            stol(reserve[15]) + stol(reserve[16]);
+  return activeJiffies;
+}
 
 // TODO: Read and return the number of active jiffies for the system
 long LinuxParser::ActiveJiffies() {
@@ -269,7 +285,27 @@ string LinuxParser::User(int pid[[maybe_unused]]) {
 
 // TODO: Read and return the uptime of a process
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::UpTime(int pid[[maybe_unused]]) { return 0; }
+long LinuxParser::UpTime(int pid[[maybe_unused]]) {
+ // source https://man7.org/linux/man-pages/man5/proc.5.html
+  string line, value;
+  long processUptime;
+  vector<string> reserve;
+  string folder = std::to_string(pid);
+  std::ifstream file(kProcDirectory + folder + kStatFilename);
+  if (file.is_open()){
+    getline(file, line);
+    std::stringstream ss(line);
+    while (ss >> value){
+      reserve.emplace_back(value);
+    }
+    processUptime = UpTime() - stol(reserve[21]) / sysconf(_SC_CLK_TCK);
+    return processUptime;
+  }
+
+
+
+
+  return 0; }
 
 std::map<LinuxParser::CPUStates, long> LinuxParser::InitialJiffies(vector<string> const &v){
   std::map<LinuxParser::CPUStates, long> m{

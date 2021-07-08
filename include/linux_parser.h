@@ -7,6 +7,9 @@
 #include <map>
 #include <numeric>
 #include <utility>
+#include <time.h>
+#include <unistd.h>
+
 
 namespace LinuxParser {
 // Paths
