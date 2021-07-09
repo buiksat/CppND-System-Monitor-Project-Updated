@@ -89,21 +89,22 @@ float LinuxParser::MemoryUtilization() {
     filestream.close();
   }
   return static_cast<float>(memTotal - memFree)/ memTotal;
- }
+}
 
 // TODO: Read and return the system uptime
 long LinuxParser::UpTime() {
-   string line;
-   long upTime, idleTime;
-  std::ifstream stream(kProcDirectory + kUptimeFilename);
-   if (stream.is_open()) {
-     std::getline(stream, line);
-     std::istringstream linestream(line);
-     linestream >> upTime >> idleTime;
-     stream.close();
-   }
-   return upTime;
- }
+  string line;
+  long upTime{0};
+  long idleTime{0};
+  std::ifstream file(kProcDirectory + kUptimeFilename);
+  if (file.is_open()) {
+    std::getline(file, line);
+    std::istringstream ss(line);
+    ss >> upTime >> idleTime;
+    file.close();
+  }
+  return upTime;
+}
 
 // TODO: Read and return the number of jiffies for the system
 long LinuxParser::Jiffies() {
@@ -116,25 +117,24 @@ long LinuxParser::Jiffies() {
 }
 
 // TODO: Read and return the number of active jiffies for a PID
-// REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) {
-    string line, value;
-    vector<string> reserve;
-    string folder = std::to_string(pid);
-    std::ifstream file(kProcDirectory + folder + kStatFilename);
-    if (file.is_open()) {
-        getline(file, line);
-        std::stringstream ss(line);
-        while (ss >> value) {
-            reserve.emplace_back(value);
-        }
+long LinuxParser::ActiveJiffies(int pid) {
+  string line, value;
+  vector<string> reserve;
+  string folder = std::to_string(pid);
+  std::ifstream file(kProcDirectory + folder + kStatFilename);
+  if (file.is_open()) {
+    getline(file, line);
+    std::stringstream ss(line);
+    while (ss >> value) {
+      reserve.emplace_back(value);
     }
+  }
   auto utime = stol(reserve[13]);
-      auto stime = stol(reserve[14]);
-    auto cutime = stol(reserve[15]);
-    auto cstime = stol(reserve[16]);
-    auto total_time = utime + stime + cstime + cutime;
-    return total_time;
+  auto stime = stol(reserve[14]);
+  auto cutime = stol(reserve[15]);
+  auto cstime = stol(reserve[16]);
+  auto total_time = utime + stime + cstime + cutime;
+  return total_time;
 }
 
 // TODO: Read and return the number of active jiffies for the system
@@ -213,7 +213,6 @@ int LinuxParser::RunningProcesses() {
 
 }
 // TODO: Read and return the command associated with a process
-// REMOVE: [[maybe_unused]] once you define the function
 string LinuxParser::Command(int pid) {
   string line;
   string folder = std::to_string(pid);
@@ -224,7 +223,6 @@ string LinuxParser::Command(int pid) {
   return line; }
 
 // TODO: Read and return the memory used by a process
-// REMOVE: [[maybe_unused]] once you define the function
 string LinuxParser::Ram(int pid) {
   string line, title, memory, kB;
   string folder = std::to_string(pid);
@@ -269,10 +267,11 @@ string LinuxParser::User(int pid) {
   std::ifstream file(kPasswordPath);
   if (file.is_open()){
     while(getline(file, line)){
-      std::replace(line.begin(), line.end(), ':', ' ');
       std::stringstream ss(line);
-      ss >> userName >> str >> userID;
-      if (userID == user && str == "x"){
+      getline(ss, userName, ':');
+      getline(ss, str, ':');
+      getline(ss, userID, ':');
+      if (userID == user){
         return userName;
       }
     }
@@ -281,7 +280,6 @@ string LinuxParser::User(int pid) {
 }
 
 // TODO: Read and return the uptime of a process
-// REMOVE: [[maybe_unused]] once you define the function
 long LinuxParser::UpTime(int pid) {
   string line, value;
   vector<string> reserve;
@@ -294,13 +292,11 @@ long LinuxParser::UpTime(int pid) {
       reserve.emplace_back(value);
     }
   }
-    auto starttime = stof(reserve[21]);
-    auto Hertz = (float)sysconf(_SC_CLK_TCK);
-    auto uptime = LinuxParser::UpTime();
-    auto seconds = uptime - (starttime / Hertz) ;
-    return static_cast<long>(seconds);
+  auto startTime = stof(reserve[21]);
+  auto Hertz = (float)sysconf(_SC_CLK_TCK);
+  auto uptime = (float)LinuxParser::UpTime();
+  auto seconds = uptime - (startTime / Hertz) ;
+  return static_cast<long>(seconds);
 }
-
-
 
 

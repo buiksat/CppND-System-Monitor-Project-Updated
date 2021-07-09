@@ -2,13 +2,12 @@
 #include "linux_parser.h"
 #include <thread>
 #include <chrono>
-#include <unistd.h>
 
 
 // TODO: Return the aggregate CPU utilization
 float Processor::Utilization() {
   auto prevIdle = LinuxParser::IdleJiffies();
-  auto prevTotal = LinuxParser::Jiffies();
+  auto  prevTotal = LinuxParser::Jiffies();
   std::this_thread::sleep_for(std::chrono::milliseconds(200));
   auto idle = LinuxParser::IdleJiffies();
   auto total = LinuxParser::Jiffies();

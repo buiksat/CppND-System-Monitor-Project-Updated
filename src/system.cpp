@@ -23,18 +23,9 @@ vector<Process>& System::Processes() {
   vector<int> processIDs = LinuxParser::Pids();
   for(int pid : processIDs){
     Process p{pid};
-    // start testing
-//    if (pid == 2240){
-//        p.CpuUtilization();
-//
-//    }
-//    p.UpTime();
-//    p.User();
-//    p.Command();
-//    p.Pid();
-
-    // end testing
-    processes_.push_back(p);
+    if(p.CpuUtilization() > 0.01){
+      processes_.push_back(p);
+    }
   }
   sort(processes_.begin(),processes_.end());
   return processes_;
