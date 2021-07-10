@@ -207,24 +207,32 @@ int LinuxParser::RunningProcesses() {
 }
 string LinuxParser::Command(int pid) {
   string line;
+  line.clear();
   string folder = std::to_string(pid);
   std::ifstream file(kProcDirectory + folder + kCmdlineFilename);
-  if (file.is_open()){
+  if (file.is_open()) {
     getline(file, line);
     file.close();
   }
-  return line; }
+  long unsigned int width = 40;
+  if (line.length() > width)
+    return line.substr(0, width) + "...";
+  return line;
+}
 
 string LinuxParser::Ram(int pid) {
   string line, title, memory, kB;
+  line.clear();
   string folder = std::to_string(pid);
   std::ifstream file(kProcDirectory + folder + kStatusFilename);
   if (file.is_open()) {
     while(getline(file, line)){
       std::stringstream ss(line);
       ss >> title >> memory >> kB;
-      if (title == "VmSize:"){
-        memory = to_string(stol(memory) / 1024);
+      // I have used VmRSS instead of VmSize
+      if (title == "VmRSS:"){
+        float memoryFloat = stof(memory) / 1024;
+        memory = (memoryFloat > 0.001) ? to_string((long)memoryFloat) : "0";
       }
     }
     file.close();
@@ -234,6 +242,7 @@ string LinuxParser::Ram(int pid) {
 
 string LinuxParser::Uid(int pid) {
   string line, title, number;
+  line.clear();
   string folder = std::to_string(pid);
   std::ifstream file(kProcDirectory + folder + kStatusFilename);
   if (file.is_open()) {
@@ -251,6 +260,7 @@ string LinuxParser::Uid(int pid) {
 
 string LinuxParser::User(int pid) {
   string line, userName, str, userID;
+  line.clear(); userName.clear();
   string user = Uid(pid);
   std::ifstream file(kPasswordPath);
   if (file.is_open()){

@@ -21,7 +21,8 @@ vector<Process>& System::Processes() {
   vector<int> processIDs = LinuxParser::Pids();
   for(int pid : processIDs){
     Process p{pid};
-    if(p.CpuUtilization() > 0.001){
+    bool badProcess = p.Ram() == "0" || p.Command().empty();
+    if (!badProcess){
       processes_.push_back(p);
     }
   }

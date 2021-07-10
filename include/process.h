@@ -2,6 +2,9 @@
 #define PROCESS_H
 
 #include <string>
+#include <unistd.h>
+#include <string>
+
 #include "linux_parser.h"
 using std::string;
 using std::to_string;
@@ -17,7 +20,7 @@ class Process {
   std::string User();
   std::string Command();
   float CpuUtilization();
-  std::string Ram() const;
+  std::string Ram();
   long UpTime() const;
   bool operator<(Process const& a) const;
 
@@ -25,6 +28,8 @@ class Process {
  private:
   int pid_;
   float usage_;
+  string memory_;
+  string command_;
 };
 
 #endif
