@@ -13,15 +13,15 @@ It contains relevant attributes as shown below
 class Process {
  public:
   Process(int pid);
-  int Pid();                               // TODO: See src/process.cpp
-  std::string User();                      // TODO: See src/process.cpp
-  std::string Command();                   // TODO: See src/process.cpp
-  float CpuUtilization();                  // TODO: See src/process.cpp
-  std::string Ram() const;                       // TODO: See src/process.cpp
-  long UpTime() const;                       // TODO: See src/process.cpp
-  bool operator<(Process const& a) const;  // TODO: See src/process.cpp
+  int Pid();
+  std::string User();
+  std::string Command();
+  float CpuUtilization();
+  std::string Ram() const;
+  long UpTime() const;
+  bool operator<(Process const& a) const;
 
-  // TODO: Declare any necessary private members
+
  private:
   int pid_;
   float usage_;
